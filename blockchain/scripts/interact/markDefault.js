@@ -9,15 +9,24 @@ async function main() {
     CONTRACT_ADDRESS
   );
 
-  const loanId = 0; // defaulting loan 0
+  const totalLoans = await loanManager.loanCounter();
+  const now = Math.floor(Date.now() / 1000);
 
-  const tx = await loanManager
-    .connect(admin)
-    .markLoanDefault(loanId);
+  let found = false;
 
-  await tx.wait();
+  for (let i = 0; i < totalLoans; i++) {
+    const loan = await loanManager.getLoan(i);
 
-  console.log(`⚠️ Loan ${loanId} marked as DEFAULT`);
+    if (!loan.repaid && !loan.defaulted && loan.dueDate < now) {
+      await loanManager.connect(admin).markLoanDefault(i);
+      console.log(`⚠️ Loan ${i} marked as DEFAULT`);
+      found = true;
+    }
+  }
+
+  if (!found) {
+    console.log("ℹ️ No overdue loans found");
+  }
 }
 
 main().catch(console.error);

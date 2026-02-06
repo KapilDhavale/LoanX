@@ -2,29 +2,57 @@ const hre = require("hardhat");
 const { CONTRACT_ADDRESS } = require("./config");
 
 async function main() {
-  const [, user] = await hre.ethers.getSigners(); // borrower signer
-
+  const [, user] = await hre.ethers.getSigners();
   const loanManager = await hre.ethers.getContractAt(
     "LoanManager",
     CONTRACT_ADDRESS
   );
 
-  const counter = await loanManager.loanCounter();
-  const latestLoanId = Number(counter) - 1;
+  // Read loanId from env
+  const loanIdEnv = process.env.LOAN_ID;
 
-  if (latestLoanId < 0) {
-    console.log("❌ No loans to repay");
+  if (loanIdEnv !== undefined) {
+    const loanId = Number(loanIdEnv);
+    const loan = await loanManager.getLoan(loanId);
+
+    if (loan.borrower.toLowerCase() !== user.address.toLowerCase()) {
+      console.log("❌ You are not the borrower of this loan");
+      return;
+    }
+
+    if (loan.repaid) {
+      console.log("ℹ️ Loan already repaid");
+      return;
+    }
+
+    if (loan.defaulted) {
+      console.log("❌ Loan already defaulted");
+      return;
+    }
+
+    await loanManager.connect(user).repayLoan(loanId);
+    console.log(`✅ Loan ${loanId} repaid by ${user.address}`);
     return;
   }
 
-  await loanManager
-    .connect(user)
-    .repayLoan(latestLoanId);
+  // fallback: auto-detect
+  const totalLoans = await loanManager.loanCounter();
 
-  console.log(`✅ Loan ${latestLoanId} repaid by ${user.address}`);
+  for (let i = Number(totalLoans) - 1; i >= 0; i--) {
+    const loan = await loanManager.getLoan(i);
+
+    if (
+      loan.borrower.toLowerCase() === user.address.toLowerCase() &&
+      !loan.repaid &&
+      !loan.defaulted
+    ) {
+      await loanManager.connect(user).repayLoan(i);
+      console.log(`✅ Loan ${i} repaid by ${user.address}`);
+      return;
+    }
+  }
+
+  console.log("❌ No unpaid loan found for this user");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(console.error);
