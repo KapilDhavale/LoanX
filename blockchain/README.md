@@ -182,6 +182,7 @@ The ABI defines the **public interface** for interacting with the contract.
   * Stable contract address
 
 ---
+npx hardhat ignition deploy ignition/modules/LoanManagerModule.js --network localhost
 
 
 
