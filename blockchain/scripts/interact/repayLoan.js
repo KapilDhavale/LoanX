@@ -2,22 +2,29 @@ const hre = require("hardhat");
 const { CONTRACT_ADDRESS } = require("./config");
 
 async function main() {
-  const [, user] = await hre.ethers.getSigners(); // borrower
+  const [, user] = await hre.ethers.getSigners(); // borrower signer
 
   const loanManager = await hre.ethers.getContractAt(
     "LoanManager",
     CONTRACT_ADDRESS
   );
 
-  const loanId = 0;
+  const counter = await loanManager.loanCounter();
+  const latestLoanId = Number(counter) - 1;
 
-  const tx = await loanManager
+  if (latestLoanId < 0) {
+    console.log("❌ No loans to repay");
+    return;
+  }
+
+  await loanManager
     .connect(user)
-    .repayLoan(loanId);
+    .repayLoan(latestLoanId);
 
-  await tx.wait();
-
-  console.log(`✅ Loan ${loanId} repaid by ${user.address}`);
+  console.log(`✅ Loan ${latestLoanId} repaid by ${user.address}`);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
