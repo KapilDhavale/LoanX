@@ -10,7 +10,7 @@ async function main() {
     CONTRACT_ADDRESS
   );
 
-  console.log("\n🔥 CBI MULTI-USER STRESS TEST (FIXED)\n");
+  console.log("\n🔥 CBI MULTI-USER STRESS TEST (STABLE)\n");
 
   await registerAll(loanManager, [A, B, C, D]);
 
@@ -20,7 +20,6 @@ async function main() {
   await scenario("D DEFAULT", loanManager, admin, D, 1, 2, true);
 
   console.log("\n📊 FINAL CBI REPORT\n");
-
   await report(loanManager, "A (Early)", A);
   await report(loanManager, "B (On-time)", B);
   await report(loanManager, "C (Late)", C);
@@ -32,14 +31,13 @@ async function main() {
 async function scenario(label, contract, admin, user, durationDays, delayDays, shouldDefault = false) {
   console.log(`\n▶ ${label}`);
 
-  const before = Number(await contract.loanCounter());
+  const loanId = Number(await contract.loanCounter());
 
   await (await contract.connect(user).requestLoan(
     1000,
     durationDays * 24 * 60 * 60
   )).wait();
 
-  const loanId = before;
   console.log(`📥 Loan ${loanId} created`);
 
   await advanceTime(delayDays);
@@ -52,8 +50,7 @@ async function scenario(label, contract, admin, user, durationDays, delayDays, s
     console.log(`💰 Loan ${loanId} repaid`);
   }
 
-  // give CBI engine time
-  await delay(4000);
+  await delay(7000); // allow CBI engine to react
 }
 
 async function registerAll(contract, users) {
@@ -64,13 +61,13 @@ async function registerAll(contract, users) {
 
 async function advanceTime(days) {
   if (days === 0) return;
-  await hre.network.provider.send("evm_increaseTime", [days * 24 * 60 * 60]);
+  await hre.network.provider.send("evm_increaseTime", [days * 86400]);
   await hre.network.provider.send("evm_mine");
 }
 
 async function report(contract, label, user) {
   const u = await contract.getUser(user.address);
-  console.log(label, "→ CBI:", u.cbiScore.toString());
+  console.log(`${label} → CBI: ${u.cbiScore.toString()}`);
 }
 
 function delay(ms) {

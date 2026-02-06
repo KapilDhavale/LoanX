@@ -1,6 +1,16 @@
 require("dotenv").config();
 const { ethers } = require("ethers");
 
+/* ===============================
+   CRASH GUARDS (VERY IMPORTANT)
+   =============================== */
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled Rejection:", err);
+});
+process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception:", err);
+});
+
 console.log("🔧 Starting CBI Engine...");
 console.log("📍 CONTRACT_ADDRESS:", process.env.CONTRACT_ADDRESS);
 
@@ -16,13 +26,8 @@ const loanABI = require("./abi/LoanManager.json").abi;
    PROVIDER SANITY CHECK
    =============================== */
 (async () => {
-  try {
-    const block = await provider.getBlockNumber();
-    console.log("⛓ Connected to blockchain at block:", block);
-  } catch (err) {
-    console.error("❌ Provider connection failed:", err);
-    process.exit(1);
-  }
+  const block = await provider.getBlockNumber();
+  console.log("⛓ Connected to blockchain at block:", block);
 })();
 
 /* ===============================
@@ -56,9 +61,7 @@ function getUser(address) {
    EVENT: UserRegistered
    =============================== */
 loan.on("UserRegistered", (user) => {
-  console.log("\n🧾 UserRegistered");
-  console.log("User:", user);
-
+  console.log("\n🧾 UserRegistered:", user);
   getUser(user);
 });
 
@@ -66,69 +69,49 @@ loan.on("UserRegistered", (user) => {
    EVENT: LoanRequested
    =============================== */
 loan.on("LoanRequested", (loanId, borrower, amount, dueDate) => {
-  console.log("\n📥 LoanRequested");
-  console.log({
+  console.log("\n📥 LoanRequested", {
     loanId: loanId.toString(),
     borrower,
     amount: amount.toString(),
     dueDate: dueDate.toString()
   });
 
-  const user = getUser(borrower);
-  user.totalLoans++;
+  getUser(borrower).totalLoans++;
 });
 
 /* ===============================
-   EVENT: RepaymentMade (CBI CORE)
+   EVENT: RepaymentMade
    =============================== */
 loan.on("RepaymentMade", async (loanId, borrower, amount, dueDate, paidAt) => {
   try {
-    console.log("\n💰 RepaymentMade");
-    console.log({
-      loanId: loanId.toString(),
-      borrower,
-      amount: amount.toString(),
-      dueDate: dueDate.toString(),
-      paidAt: paidAt.toString()
-    });
+    console.log("\n💰 RepaymentMade", loanId.toString());
 
     const user = getUser(borrower);
 
-    if (paidAt < dueDate) {
-      user.earlyPayments++;
-      console.log("⚡ Early payment");
-    } else if (paidAt === dueDate) {
-      user.onTimePayments++;
-      console.log("⏰ On-time payment");
-    } else {
-      user.latePayments++;
-      console.log("🐌 Late payment");
-    }
+    if (paidAt < dueDate) user.earlyPayments++;
+    else if (paidAt === dueDate) user.onTimePayments++;
+    else user.latePayments++;
 
     user.consistentRepayments++;
 
     const newScore = calculateCBI(user);
-    console.log("📊 New CBI:", newScore);
+    console.log("📊 Calculated CBI:", newScore);
 
-    await adminLoan.updateCBIScore(borrower, newScore);
+    const tx = await adminLoan.updateCBIScore(borrower, newScore);
+    await tx.wait();
+
     console.log("✅ CBI updated on-chain");
   } catch (err) {
-    console.error("❌ RepaymentMade handler error:", err);
+    console.error("❌ Repayment handler failed:", err.reason || err);
   }
 });
 
 /* ===============================
-   EVENT: LoanDefaulted (CBI CORE)
+   EVENT: LoanDefaulted
    =============================== */
-loan.on("LoanDefaulted", async (loanId, borrower, dueDate, defaultedAt) => {
+loan.on("LoanDefaulted", async (loanId, borrower) => {
   try {
-    console.log("\n❌ LoanDefaulted");
-    console.log({
-      loanId: loanId.toString(),
-      borrower,
-      dueDate: dueDate.toString(),
-      defaultedAt: defaultedAt.toString()
-    });
+    console.log("\n❌ LoanDefaulted", loanId.toString());
 
     const user = getUser(borrower);
     user.missedPayments++;
@@ -136,31 +119,24 @@ loan.on("LoanDefaulted", async (loanId, borrower, dueDate, defaultedAt) => {
     const newScore = calculateCBI(user);
     console.log("📉 Penalized CBI:", newScore);
 
-    await adminLoan.updateCBIScore(borrower, newScore);
-    console.log("❌ CBI penalty applied on-chain");
+    const tx = await adminLoan.updateCBIScore(borrower, newScore);
+    await tx.wait();
+
+    console.log("❌ CBI penalty applied");
   } catch (err) {
-    console.error("❌ LoanDefaulted handler error:", err);
+    console.error("❌ Default handler failed:", err.reason || err);
   }
 });
 
 /* ===============================
-   EVENT: CBIScoreUpdated (LOG)
+   LOG EVENTS
    =============================== */
 loan.on("CBIScoreUpdated", (user, oldScore, newScore) => {
-  console.log("\n🧠 CBIScoreUpdated");
-  console.log({
+  console.log("🧠 CBIScoreUpdated:", {
     user,
-    oldScore: oldScore.toString(),
-    newScore: newScore.toString()
+    old: oldScore.toString(),
+    new: newScore.toString()
   });
 });
 
-/* ===============================
-   EVENT: UserBlacklisted (LOG)
-   =============================== */
-loan.on("UserBlacklisted", (user, status) => {
-  console.log("\n🚫 UserBlacklisted");
-  console.log({ user, status });
-});
-
-console.log("🚀 CBI Engine fully initialized and listening...");
+console.log("🚀 CBI Engine running & listening...");
