@@ -1,13 +1,14 @@
+require("dotenv").config();
 const { ethers } = require("ethers");
 
-const provider = new ethers.WebSocketProvider("ws://127.0.0.1:8545");
+// ✅ Use ethers v5 style provider
+const provider = new ethers.providers.JsonRpcProvider(
+  process.env.RPC_URL
+);
 
 const wallet = new ethers.Wallet(
   process.env.ADMIN_PRIVATE_KEY,
   provider
 );
 
-module.exports = {
-  provider,
-  wallet
-};
+module.exports = { provider, wallet };

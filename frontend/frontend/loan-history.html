@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Borrowing History</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+<div class="main">
+
+  <h1>Loan History</h1>
+
+  <table id="loanTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Due Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="card">
+    <h3>Apply for Loan</h3>
+
+    <input type="number" id="loanAmount" placeholder="Enter amount">
+    <input type="number" id="loanDays" placeholder="Duration (days)">
+    <button onclick="applyLoan()">Apply</button>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/loans.js"></script>
+
+</body>
+</html>

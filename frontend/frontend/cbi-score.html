@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TrustScore Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h1 class="logo">TrustScore</h1>
+    <p class="subtitle">Credit Intelligence</p>
+
+    <ul>
+      <li><a href="index.html">Overview</a></li>
+      <li class="active"><a href="cbi-score.html">TrustScore Rating</a></li>
+      <li><a href="loan-history.html">Credit Summary</a></li>
+      <li><a href="repayment-insights.html">Repayment Analytics</a></li>
+    </ul>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <div class="top-bar">
+      <span>Hello</span>
+      <div class="actions">
+        <button>How It Works</button>
+        <button>My Account</button>
+        <button class="logout">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+
+      <!-- SCORE CARD -->
+      <div class="score-card">
+        <h2>Your TrustScore</h2>
+
+        <canvas id="gauge" width="300" height="200"></canvas>
+
+        <h1 id="scoreValue">--</h1>
+        <p id="scoreCategory"></p>
+
+        <button class="refresh-btn">Refresh Score</button>
+      </div>
+
+      <!-- RIGHT SIDE CARDS -->
+      <div class="info-card">
+        <h3>Credit Profile</h3>
+        <p>View your personalized credit insights and repayment behaviour.</p>
+      </div>
+
+      <div class="info-card blue">
+        <h3>Learn About Your Score</h3>
+        <p>Understand how repayment and defaults affect your TrustScore.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/cbi.js"></script>
+</body>
+</html>
