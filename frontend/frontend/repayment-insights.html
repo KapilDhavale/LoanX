@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Repayment Insights</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>TrustScore</h2>
+  <ul>
+    <li><a href="index.html">Dashboard</a></li>
+    <li><a href="cbi-score.html">TrustScore Rating</a></li>
+    <li><a href="loan-history.html">Borrowing History</a></li>
+    <li><a href="repayment-insights.html">Repayment Insights</a></li>
+  </ul>
+</div>
+
+<div class="main">
+  <h1>Repayment Insights</h1>
+
+  <div class="card-container">
+    <div class="card">
+      <h3>Successful Repayments</h3>
+      <p id="earlyCount">--</p>
+    </div>
+
+    <div class="card">
+      <h3>Active Loans</h3>
+      <p id="lateCount">--</p>
+    </div>
+
+    <div class="card">
+      <h3>Missed Payments</h3>
+      <p id="missedCount">--</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/repayment.js"></script>
+</body>
+</html>

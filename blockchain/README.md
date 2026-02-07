@@ -143,6 +143,7 @@ npx hardhat run scripts/interact/requestLoan.js --network localhost
 ### 3️⃣ Repay loan
 
 ```bash
+$env:LOAN_ID=3
 npx hardhat run scripts/interact/repayLoan.js --network localhost
 ```
 
